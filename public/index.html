@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>星屑ドッジ — STARDUST DODGE</title>
+  <meta name="description" content="降りそそぐ星屑の弾幕をかわし続ける、ブラウザで遊べる弾幕シューティング。">
+  <meta name="theme-color" content="#03040b">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game" aria-label="ゲーム画面"></canvas>
+
+  <div id="ui">
+    <button id="btn-mute" class="icon-btn" type="button" aria-label="サウンドの切替" title="サウンド (M)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="cross" d="M16 9l6 6M22 9l-6 6"/></svg>
+    </button>
+
+    <!-- タイトル -->
+    <section id="screen-title" class="screen active" aria-label="タイトル">
+      <div class="stagger">
+        <div class="logo">
+          <h1 class="logo-ja"><span>星</span><span>屑</span><span>ド</span><span>ッ</span><span>ジ</span></h1>
+          <p class="logo-en">STARDUST DODGE</p>
+        </div>
+        <button class="btn primary" id="btn-start" type="button" data-nav>
+          <span class="btn-ja">スタート</span><span class="btn-en">START</span>
+        </button>
+        <ul class="howto">
+          <li><kbd>↑↓←→</kbd> / <kbd>WASD</kbd> 移動</li>
+          <li><kbd>Shift</kbd> 低速移動</li>
+          <li>マウス / タッチ でも操作可能</li>
+          <li><kbd>Esc</kbd> ポーズ</li>
+        </ul>
+        <p class="press">PRESS ENTER OR TAP START</p>
+      </div>
+    </section>
+
+    <!-- 難易度選択 -->
+    <section id="screen-difficulty" class="screen" aria-label="難易度選択">
+      <div class="stagger">
+        <h2 class="screen-head"><span class="ja">難易度を選択</span><span class="en">SELECT DIFFICULTY</span></h2>
+        <div class="diff-list" id="diff-list"></div>
+        <button class="btn ghost" id="btn-diff-back" type="button" data-nav>
+          <span class="btn-ja">もどる</span><span class="btn-en">BACK</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- HUD -->
+    <section id="hud" aria-live="off">
+      <div class="hud-left">
+        <div class="hud-label">SCORE</div>
+        <div class="hud-score" id="hud-score">0</div>
+        <div class="hud-sub"><span id="hud-diff">NORMAL</span> · <span id="hud-time">0:00</span></div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-stage">STAGE <b id="hud-stage">1</b></div>
+        <div class="hud-bar"><i id="hud-bar"></i></div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-rank" id="hud-rank">F</div>
+        <div class="hud-lives" id="hud-lives"></div>
+        <button class="icon-btn small" id="btn-pause" type="button" aria-label="ポーズ">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <div id="countdown" aria-live="assertive"></div>
+    <div id="stage-banner"></div>
+
+    <!-- ステージ移動演出 -->
+    <section id="stage-overlay" aria-live="polite">
+      <div class="so-lines"><i></i><i></i></div>
+      <div class="so-band">
+        <div class="so-title"><span class="so-stage" id="so-stage">STAGE 1</span><span class="so-clear">CLEAR</span></div>
+        <div class="so-row">
+          <div class="so-item"><span class="so-label">SCORE</span><span class="so-val" id="so-score">0</span></div>
+          <div class="so-item"><span class="so-label">BONUS</span><span class="so-val bonus" id="so-bonus">+0</span></div>
+          <div class="so-item"><span class="so-label">RANK</span><span class="so-rank" id="so-rank">F</span></div>
+        </div>
+        <div class="so-hint" id="so-hint"></div>
+        <div class="so-next" id="so-next">NEXT ▸ STAGE 2</div>
+      </div>
+    </section>
+
+    <!-- ポーズ -->
+    <section id="screen-pause" class="screen" aria-label="ポーズ">
+      <div class="stagger">
+        <h2 class="screen-head"><span class="ja">ポーズ</span><span class="en">PAUSED</span></h2>
+        <div class="menu">
+          <button class="btn primary" id="btn-resume" type="button" data-nav><span class="btn-ja">再開</span><span class="btn-en">RESUME</span></button>
+          <button class="btn" id="btn-pause-retry" type="button" data-nav><span class="btn-ja">最初から</span><span class="btn-en">RETRY</span></button>
+          <button class="btn ghost" id="btn-pause-title" type="button" data-nav><span class="btn-ja">タイトルへ</span><span class="btn-en">TITLE</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- リザルト -->
+    <section id="screen-result" class="screen" aria-label="リザルト">
+      <div class="stagger">
+        <h2 class="screen-head"><span class="ja">リザルト</span><span class="en">RESULT</span></h2>
+        <div class="result-main">
+          <div class="result-rank-wrap">
+            <div class="result-rank-label">RANK</div>
+            <div class="result-rank" id="res-rank">F</div>
+          </div>
+          <div class="result-stats">
+            <div class="stat big"><span>SCORE</span><b id="res-score">0</b></div>
+            <div class="stat"><span>難易度</span><b id="res-diff">普通</b></div>
+            <div class="stat"><span>生存時間</span><b id="res-time">0:00</b></div>
+            <div class="stat"><span>到達ステージ</span><b id="res-stage">1</b></div>
+            <div class="stat"><span>かすり</span><b id="res-graze">0</b></div>
+            <div class="stat"><span>ベスト</span><b id="res-best">0</b></div>
+          </div>
+        </div>
+        <div class="new-record" id="res-record">NEW RECORD!</div>
+        <div class="menu row">
+          <button class="btn primary" id="btn-retry" type="button" data-nav><span class="btn-ja">もう一度</span><span class="btn-en">RETRY</span></button>
+          <button class="btn" id="btn-res-diff" type="button" data-nav><span class="btn-ja">難易度選択</span><span class="btn-en">DIFFICULTY</span></button>
+          <button class="btn ghost" id="btn-res-title" type="button" data-nav><span class="btn-ja">タイトル</span><span class="btn-en">TITLE</span></button>
+        </div>
+      </div>
+    </section>
+
+    <div id="curtain"></div>
+  </div>
+
+  <noscript><p class="noscript">このゲームを遊ぶには JavaScript を有効にしてください。</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
